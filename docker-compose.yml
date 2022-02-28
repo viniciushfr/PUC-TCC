@@ -1,13 +1,5 @@
 version: "3"
 
-volumes:
-  rabbitmq:
-  postgres-data:
-    driver: local
-
-networks:
-  boa_saude:
-
 services:
   postgres:
     image: postgres
@@ -29,7 +21,7 @@ services:
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: 'admin@admin.com.br'
-      PGADMIN_DEFAULT_PASSWORD: 'Admin@2021!'
+      PGADMIN_DEFAULT_PASSWORD: 'admin'
     ports:
       - 16543:80
     depends_on:
@@ -44,7 +36,16 @@ services:
         - 5672:5672
         - 15672:15672
     volumes:
-        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+        - rabbitmq/:/var/lib/rabbitmq/
     networks:
         - boa_saude
+
+
+volumes:
+  rabbitmq:
+    driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  boa_saude:
