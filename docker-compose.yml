@@ -2,13 +2,11 @@ version: "3"
 
 services:
   postgres:
-    image: postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: boa_saude
-      POSTGRES_HOST_AUTH_METHOD: password
+    container_name: postgres
+    env_file: 
+      - ./postgres/database.env
+    image: postgres:14.0-alpine
+    restart: always
     ports:
       - 5432:5432
     volumes:
@@ -17,8 +15,8 @@ services:
       - boa_saude
   
   pgadmin:
+    container_name: pgadmin
     image: dpage/pgadmin4
-    restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: 'admin@admin.com.br'
       PGADMIN_DEFAULT_PASSWORD: 'admin'
@@ -30,20 +28,20 @@ services:
       - boa_saude
   
   rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: 'rabbitmq'
+    container_name: rabbitmq
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile 
+    restart: unless-stopped
     ports:
         - 5672:5672
         - 15672:15672
-    volumes:
-        - rabbitmq/:/var/lib/rabbitmq/
     networks:
         - boa_saude
 
 
 volumes:
-  rabbitmq:
-    driver: local
+  
   postgres-data:
     driver: local
 
