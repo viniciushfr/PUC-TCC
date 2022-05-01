@@ -9,11 +9,14 @@ namespace BSAM.Identity.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthenticationService _authenticationService;
+        private readonly TokenService _tokenService;
 
-        public AuthController(AuthenticationService authenticationService)
+        public AuthController(AuthenticationService authenticationService, TokenService tokenService)
         {
             _authenticationService = authenticationService;
+            _tokenService = tokenService;
         }
+        
 
          
         [HttpPost("new-account")]
@@ -35,6 +38,20 @@ namespace BSAM.Identity.Api.Controllers
             try
             {
                 return Ok(await _authenticationService.Login(request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult> RefreshToken([FromBody] string refreshToken)
+        {
+
+            try
+            {
+                return Ok(await _tokenService.GetRefreshToken(refreshToken));
             }
             catch (Exception ex)
             {

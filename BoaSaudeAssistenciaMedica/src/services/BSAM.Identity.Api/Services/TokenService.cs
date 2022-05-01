@@ -129,14 +129,27 @@ namespace BSAM.Identity.Api.Services
             return refreshToken;
         }
 
-        public async Task<RefreshToken> GetRefreshToken(Guid refreshToken)
+        public async Task<RefreshTokenResponse> GetRefreshToken(string refreshToken)
         {
+            var response = new RefreshTokenResponse();
+            if (string.IsNullOrEmpty(refreshToken)) 
+            {
+                response.AddError("Refresh Token inválido");
+                return response;
+            }
+
             var token = await _context.RefreshTokens.AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Token == refreshToken);
 
-            return token != null && token.ExpirationDate.ToLocalTime() > DateTime.Now
-                ? token
-                : null;
+            
+            if (token is null) 
+            {
+                response.AddError("Refresh Token expirado");
+                return response;
+            }
+
+            response.RefreshToken = token;
+            return response;   
         }
     }
 }
