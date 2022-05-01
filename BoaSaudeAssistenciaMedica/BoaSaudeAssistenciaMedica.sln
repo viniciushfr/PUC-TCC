@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31825.309
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{40931B4B-B867-4AE1-8216-E2A6DCA39BFE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{108C2321-8ED2-43B0-BBB0-A6AFE6BE029E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{E2366A24-B304-4454-A0BF-B8533D1A58CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSAM.Identity.Api", "src\services\BSAM.Identity.Api\BSAM.Identity.Api.csproj", "{D9980183-7E04-4178-8931-786AE2C1EF3A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D9980183-7E04-4178-8931-786AE2C1EF3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9980183-7E04-4178-8931-786AE2C1EF3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9980183-7E04-4178-8931-786AE2C1EF3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9980183-7E04-4178-8931-786AE2C1EF3A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{108C2321-8ED2-43B0-BBB0-A6AFE6BE029E} = {40931B4B-B867-4AE1-8216-E2A6DCA39BFE}
+		{E2366A24-B304-4454-A0BF-B8533D1A58CA} = {108C2321-8ED2-43B0-BBB0-A6AFE6BE029E}
+		{D9980183-7E04-4178-8931-786AE2C1EF3A} = {E2366A24-B304-4454-A0BF-B8533D1A58CA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {822A4D9E-1C69-4542-A044-909D63A6A94F}
+	EndGlobalSection
+EndGlobal
