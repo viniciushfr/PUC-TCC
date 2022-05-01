@@ -1,6 +1,9 @@
-﻿namespace BSAM.Identity.Api.Responses
+﻿using BSAM.Identity.Api.Models;
+
+namespace BSAM.Identity.Api.Responses
 {
-    public class RefreshTokenResponse
+    public class RefreshTokenResponse : BaseResponse
     {
+        public RefreshToken RefreshToken { get; set; }
     }
 }
