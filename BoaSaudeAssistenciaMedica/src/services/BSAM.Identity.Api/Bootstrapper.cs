@@ -1,4 +1,7 @@
 ﻿using BSAM.Identity.Api.Configuration;
+using BSAM.Identity.Api.Requests;
+using BSAM.Identity.Api.Requests.Validators;
+using FluentValidation;
 
 namespace BSAM.Identity.Api
 {
@@ -8,7 +11,7 @@ namespace BSAM.Identity.Api
         {
             services.AddIdentityConfiguration(configuration);
 
-            services.AddApiConfiguration();
+            services.AddApiConfiguration(configuration);
 
             services.AddSwaggerConfiguration();
 

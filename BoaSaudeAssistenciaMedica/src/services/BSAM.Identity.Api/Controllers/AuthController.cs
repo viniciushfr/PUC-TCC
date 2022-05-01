@@ -1,5 +1,5 @@
-﻿using BSAM.Identity.Api.Commands;
-using MediatR;
+﻿using BSAM.Identity.Api.Requests;
+using BSAM.Identity.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BSAM.Identity.Api.Controllers
@@ -8,22 +8,20 @@ namespace BSAM.Identity.Api.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IMediator _meadiator;
+        private readonly AuthenticationService _authenticationService;
 
-        public AuthController(IMediator meadiator)
+        public AuthController(AuthenticationService authenticationService)
         {
-            _meadiator = meadiator;
+            _authenticationService = authenticationService;
         }
-
 
          
         [HttpPost("new-account")]
-        public async Task<IActionResult> Register(UserRegisterCommand commmand)
+        public async Task<IActionResult> Register(UserRegisterRequest request)
         {
             try
             {
-                await _meadiator.Send(commmand);
-                return Ok();
+                return Ok(await _authenticationService.Register(request));
             }
             catch (Exception ex)
             {
@@ -32,12 +30,11 @@ namespace BSAM.Identity.Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(UserLoginCommand commmand)
+        public async Task<IActionResult> Login(UserLoginRequest request)
         {
             try
             {
-                var response = await _meadiator.Send(commmand);
-                return Ok(response);
+                return Ok(await _authenticationService.Login(request));
             }
             catch (Exception ex)
             {

@@ -1,10 +1,8 @@
-﻿using MediatR;
-
-namespace BSAM.Identity.Api.Commands
+﻿namespace BSAM.Identity.Api.Requests
 {
-    public class UserRegisterCommand : IRequest
+    public class UserRegisterRequest
     {
-        public UserRegisterCommand(string email, string password, string confirmationPassword)
+        public UserRegisterRequest(string email, string password, string confirmationPassword)
         {
             Email = email;
             Password = password;

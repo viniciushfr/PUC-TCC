@@ -1,22 +1,33 @@
 ﻿using BSAM.Identity.Api.Extensions;
 using BSAM.Identity.Api.Extensions.User;
+using BSAM.Identity.Api.Requests;
+using BSAM.Identity.Api.Requests.Validators;
 using BSAM.Identity.Api.Services;
-using MediatR;
-using NetDevPack.Security.JwtSigningCredentials.AspNetCore;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using System.Reflection;
 
 namespace BSAM.Identity.Api.Configuration
 {
     public static class ApiConfig
     {
-        public static IServiceCollection AddApiConfiguration(this IServiceCollection services)
+        public static IServiceCollection AddApiConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddControllers();
+            services.AddControllers()
+                .AddFluentValidation(options =>
+                {
+                    
+                    options.ImplicitlyValidateChildProperties = true;
+                    options.ImplicitlyValidateRootCollectionElements = true;
+                    options.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+                });
 
+            services.AddScoped<TokenService>();
             services.AddScoped<AuthenticationService>();
             services.AddScoped<IAspNetUser, AspNetUser>();
+          
 
-            services.AddMediatR(Assembly.GetExecutingAssembly());
+            services.AddJwtConfiguration(configuration);
 
             return services;
         }
@@ -34,8 +45,6 @@ namespace BSAM.Identity.Api.Configuration
             app.UseRouting();
 
             app.UseAuthConfiguration();
-
-            app.UseJwksDiscovery();
 
             return app;
         }

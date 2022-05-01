@@ -1,143 +1,92 @@
-﻿using BSAM.Identity.Api.Data;
-using BSAM.Identity.Api.Extensions;
-using BSAM.Identity.Api.Extensions.User;
-using BSAM.Identity.Api.Models;
+﻿using BSAM.Identity.Api.Requests;
 using BSAM.Identity.Api.Responses;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using NetDevPack.Security.JwtSigningCredentials.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace BSAM.Identity.Api.Services
 {
     public class AuthenticationService
     {
-        public readonly SignInManager<IdentityUser> SignInManager;
-        public readonly UserManager<IdentityUser> UserManager;
-        private readonly AppSettings _appSettings;
-        private readonly AppTokenSettings _appTokenSettingsSettings;
-        private readonly ApplicationDbContext _context;
-
-        private readonly IJsonWebKeySetService _jwksService;
-        private readonly IAspNetUser _aspNetUser;
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly ILogger<AuthenticationService> _logger;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly TokenService _tokenService;
 
         public AuthenticationService(
             SignInManager<IdentityUser> signInManager,
+            ILogger<AuthenticationService> logger,
             UserManager<IdentityUser> userManager,
-            IOptions<AppSettings> appSettings,
-            IOptions<AppTokenSettings> appTokenSettingsSettings,
-            ApplicationDbContext context,
-            IJsonWebKeySetService jwksService,
-            IAspNetUser aspNetUser)
+            TokenService tokenService)
         {
-            SignInManager = signInManager;
-            UserManager = userManager;
-            _appSettings = appSettings.Value;
-            _appTokenSettingsSettings = appTokenSettingsSettings.Value;
-            _jwksService = jwksService;
-            _aspNetUser = aspNetUser;
-            _context = context;
+            _signInManager = signInManager;
+            _logger = logger;
+            _userManager = userManager;
+            _tokenService = tokenService;
         }
 
-        public async Task<UserLoginResponse> GerarJwt(string email)
+        public async Task<UserLoginResponse> Register(UserRegisterRequest request)
         {
-            var user = await UserManager.FindByEmailAsync(email);
-            var claims = await UserManager.GetClaimsAsync(user);
-
-            var identityClaims = await GetClaimsUsuario(claims, user);
-            var encodedToken = CodificarToken(identityClaims);
-
-            var refreshToken = await GerarRefreshToken(email);
-
-            return GetRespostaToken(encodedToken, user, claims, refreshToken);
-        }
-
-        private async Task<ClaimsIdentity> GetClaimsUsuario(ICollection<Claim> claims, IdentityUser user)
-        {
-            var userRoles = await UserManager.GetRolesAsync(user);
-
-            claims.Add(new Claim(JwtRegisteredClaimNames.Sub, user.Id));
-            claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
-            claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
-            claims.Add(new Claim(JwtRegisteredClaimNames.Nbf, ToUnixEpochDate(DateTime.UtcNow).ToString()));
-            claims.Add(new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(DateTime.UtcNow).ToString(),
-                ClaimValueTypes.Integer64));
-            foreach (var userRole in userRoles)
+            try
             {
-                claims.Add(new Claim("role", userRole));
+                _logger.LogInformation("Registrando usuario - {login}", request.Email);
+
+                var user = new IdentityUser { UserName = request.Email, Email = request.Email, EmailConfirmed = true };
+
+                var response = new UserLoginResponse();
+
+                var result = await _userManager.CreateAsync(user, request.Password);
+
+                if (result.Succeeded)
+                    return await _tokenService.GenerateJwt(request.Email);
+
+                return GetIdentityErrors(result);
+
             }
-
-            var identityClaims = new ClaimsIdentity();
-            identityClaims.AddClaims(claims);
-
-            return identityClaims;
+            catch (Exception ex)
+            {
+                _logger.LogError("Error : {error}  ---  Message : {message}", ex, ex.Message);
+                throw new Exception(ex.Message);
+            }
         }
 
-        private string CodificarToken(ClaimsIdentity identityClaims)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var currentIssuer =
-                $"{_aspNetUser.GetHttpContext().Request.Scheme}://{_aspNetUser.GetHttpContext().Request.Host}";
-            var key = _jwksService.GetCurrent();
-            var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
-            {
-                Issuer = currentIssuer,
-                Subject = identityClaims,
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = key
-            });
+      
 
-            return tokenHandler.WriteToken(token);
-        }
-
-        private UserLoginResponse GetRespostaToken(string encodedToken, IdentityUser user,
-            IEnumerable<Claim> claims, RefreshToken refreshToken)
+        public async Task<UserLoginResponse> Login(UserLoginRequest request)
         {
-            return new UserLoginResponse
+            try
             {
-                AccessToken = encodedToken,
-                RefreshToken = refreshToken.Token,
-                ExpiresIn = TimeSpan.FromHours(1).TotalSeconds,
-                UserToken = new UserToken
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    Claims = claims.Select(c => new UserClaim { Type = c.Type, Value = c.Value })
+                _logger.LogInformation("Logando usuario - {login}", request.Email);
+
+                var response = new UserLoginResponse();
+                var result = await _signInManager.PasswordSignInAsync(request.Email, request.Password, false, true);
+
+                if (result.Succeeded)
+                    return await _tokenService.GenerateJwt(request.Email);
+
+                if (result.IsLockedOut) 
+                {   
+                    response.AddError("Usuário temporiamente bloqueado por tentativas inválidas");
+                    return response;
                 }
-            };
-        }
 
-        private static long ToUnixEpochDate(DateTime date)
-            => (long)Math.Round((date.ToUniversalTime() - new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero))
-                .TotalSeconds);
+                response.AddError("Usuário ou Senha incorretos");
+                return response;
 
-        private async Task<RefreshToken> GerarRefreshToken(string email)
-        {
-            var refreshToken = new RefreshToken
+            }
+            catch (Exception ex)
             {
-                Username = email,
-                ExpirationDate = DateTime.UtcNow.AddHours(_appTokenSettingsSettings.RefreshTokenExpiration)
-            };
-
-            _context.RefreshTokens.RemoveRange(_context.RefreshTokens.Where(u => u.Username == email));
-            await _context.RefreshTokens.AddAsync(refreshToken);
-
-            await _context.SaveChangesAsync();
-
-            return refreshToken;
+                _logger.LogError("Error : {error}  ---  Message : {message}", ex, ex.Message);
+                throw new Exception(ex.Message);
+            }
         }
 
-        public async Task<RefreshToken> GetRefreshToken(Guid refreshToken)
+        private static UserLoginResponse GetIdentityErrors(IdentityResult result)
         {
-            var token = await _context.RefreshTokens.AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Token == refreshToken);
+            var response = new UserLoginResponse();
+            
+            foreach (var error in result.Errors)
+                response.AddError(error.Description);
 
-            return token != null && token.ExpirationDate.ToLocalTime() > DateTime.Now
-                ? token
-                : null;
-        }
+            return response;
+        } 
     }
 }

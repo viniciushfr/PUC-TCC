@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using NetDevPack.Security.JwtSigningCredentials;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace BSAM.Identity.Api.Extensions
 {
@@ -17,13 +18,19 @@ namespace BSAM.Identity.Api.Extensions
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(x =>
+            }).AddJwtBearer(options =>
             {
-                x.RequireHttpsMetadata = false;
-                x.BackchannelHttpHandler = new HttpClientHandler { ServerCertificateCustomValidationCallback = delegate { return true; } };
-                x.SaveToken = true;
-                //NetDevPack.Security.JwtExtensions
-                //x.SetJwksOptions(new JwkOptions(appSettings.AutenticacaoJwksUrl));
+                options.RequireHttpsMetadata = true;
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(appSettings.Secret)),
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = appSettings.Issuer,
+                    ValidAudience = appSettings.Audience
+                };
             });
         }
 

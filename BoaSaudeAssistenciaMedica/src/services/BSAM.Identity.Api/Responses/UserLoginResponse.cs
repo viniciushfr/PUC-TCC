@@ -1,6 +1,6 @@
 ﻿namespace BSAM.Identity.Api.Responses
 {
-    public class UserLoginResponse
+    public class UserLoginResponse : BaseResponse
     {
         public string AccessToken { get; set; } = string.Empty;
         public Guid RefreshToken { get; set; }

@@ -4,6 +4,5 @@
     {
         public const string IdentityDB = "IdentityDB";
         public const string AppSettings = "AppSettings";
-        public const string AppTokenSettings = "AppTokenSettings";
     }
 }
