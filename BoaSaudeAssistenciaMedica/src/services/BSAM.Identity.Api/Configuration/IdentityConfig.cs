@@ -19,7 +19,7 @@ namespace BSAM.Identity.Api.Configuration
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
-
+            services.AddScoped<DataSeeder>();
             return services;
         }
     }

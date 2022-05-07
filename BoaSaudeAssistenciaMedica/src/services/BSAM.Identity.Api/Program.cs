@@ -1,6 +1,8 @@
 
 
 using BSAM.Identity.Api;
+using BSAM.Identity.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,20 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
     });
+}
+
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+
+    if (dbContext != null)
+        dbContext.Database.Migrate();
+
+    await seeder.SeedRoles();
+    await seeder.SeedAdminUser();
 }
 
 app.UseHttpsRedirection();

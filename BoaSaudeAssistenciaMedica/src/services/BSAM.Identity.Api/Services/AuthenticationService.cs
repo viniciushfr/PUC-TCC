@@ -36,8 +36,11 @@ namespace BSAM.Identity.Api.Services
                 var result = await _userManager.CreateAsync(user, request.Password);
 
                 if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "User");
                     return await _tokenService.GenerateJwt(request.Email);
-
+                }
+                    
                 return GetIdentityErrors(result);
 
             }
